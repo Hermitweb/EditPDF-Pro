@@ -1,0 +1,27 @@
+[project]
+name = "edit-pdf-pro"
+version = "0.1.0"
+description = "一站式PDF桌面编辑器 — Fluent Design"
+requires-python = ">=3.8"
+
+dependencies = [
+    "PyMuPDF>=1.21.0",
+    "PyQt5>=5.15.4",
+    "PyQt-Fluent-Widgets>=1.5.0",
+    "Pillow>=10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "ruff",
+    "pytest",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py38"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
