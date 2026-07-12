@@ -1,4 +1,4 @@
-"""PDF引擎——全部功能"""
+﻿"""PDF引擎——全部功能"""
 
 import os, tempfile
 import fitz
@@ -24,6 +24,7 @@ class PDFEngine(QObject):
         super().__init__(parent)
         self._doc = None; self._filepath = ""; self._cur = 0
         self._modified = False; self._undo = []
+        self._added_texts = []  # 已添加文字追踪
         self._to = TextOps(); self._po = PageOps()
         self._wo = WatermarkOps(); self._ao = AnnotationOps()
         self._re = Renderer()
@@ -79,6 +80,7 @@ class PDFEngine(QObject):
             try: os.unlink(s)
             except: pass
         self._undo = []
+        self._added_texts = []
 
     @property
     def is_open(self): return self._doc is not None
@@ -120,14 +122,44 @@ class PDFEngine(QObject):
     def add_text(self, pn, pos, text, fn="SimSun", fs=12, c=(0,0,0)):
         if not self._doc: return False
         self._snap()
+        page = self._doc[pn]
+        # 确保字体已加载到页面
+        from core.text_ops import _init_system_fonts
+        _init_system_fonts(page)
         try:
-            self._doc[pn].insert_text(pos, text, fontsize=fs, fontname=fn, color=c)
+            page.insert_text(pos, text, fontsize=fs, fontname=fn, color=c)
+            self._added_texts.append({"page": pn, "text": text, "x": pos[0], "y": pos[1],
+                                       "fn": fn, "fs": fs, "c": c})
             self._modified = True; return True
         except:
             try:
-                self._doc[pn].insert_text(pos, text, fontsize=fs, fontname="china-ss", color=c)
+                page.insert_text(pos, text, fontsize=fs, fontname="china-ss", color=c)
+                self._added_texts.append({"page": pn, "text": text, "x": pos[0], "y": pos[1],
+                                           "fn": "china-ss", "fs": fs, "c": c})
                 self._modified = True; return True
             except: return False
+
+    def get_added_texts(self, page_num):
+        """获取指定页已添加文字列表"""
+        return [t for t in self._added_texts if t["page"] == page_num]
+
+    def move_text(self, idx, new_pos):
+        """移动指定索引的已添加文字到新位置（不覆盖旧位置）"""
+        if idx < 0 or idx >= len(self._added_texts): return False
+        t = self._added_texts[idx]
+        pn = t["page"]
+        self._snap()
+        tw = fitz.get_text_length(t["text"], fontname="china-ss", fontsize=t["fs"])
+        r = fitz.Rect(t["x"], t["y"]-t["fs"]*1.1, t["x"]+tw+2, t["y"]+t["fs"]*0.4)
+        self._doc[pn].add_redact_annot(r)
+        self._doc[pn].apply_redactions(images=0)
+        import core.text_ops as _to
+        _to._font_cache.pop(id(self._doc[pn]), None)
+        _to._init_system_fonts(self._doc[pn])
+        self._doc[pn].insert_text(new_pos, t["text"], fontsize=t["fs"],
+                                   fontname=t["fn"], color=t["c"])
+        t["x"], t["y"] = new_pos[0], new_pos[1]
+        self._modified = True; return True
 
     def merge_pdfs(self, fps, out): return self._po.merge_pdfs(fps, out)
     def split_pdf(self, d, r):
@@ -177,6 +209,18 @@ class PDFEngine(QObject):
         if not self._doc: return False
         self._snap(); ok=self._ao.add_highlight(self._doc[pn], rect)
         if ok: self._modified=True; return ok
+    def add_underline(self, pn, rect, color=(0,1,0)):
+        if not self._doc: return False
+        self._snap()
+        ok = self._ao.add_underline(self._doc[pn], rect, color)
+        if ok: self._modified = True
+        return ok
+    def add_strikeout(self, pn, rect, color=(1,0,0)):
+        if not self._doc: return False
+        self._snap()
+        ok = self._ao.add_strikeout(self._doc[pn], rect, color)
+        if ok: self._modified = True
+        return ok
     def is_encrypted(self): return self._doc.is_encrypted if self._doc else False
     def authenticate(self, pwd): return self._doc.authenticate(pwd) if self._doc else False
     def encrypt(self, pwd):
@@ -193,6 +237,40 @@ class PDFEngine(QObject):
         ok=self._doc.authenticate(pwd)
         if ok: self._snap(); self._modified=True; self.operation_completed.emit("已解密")
         return ok
+    def compress(self, output_path=None):
+        if not self._doc: return False
+        self._snap()
+        path = output_path or self._filepath
+        if not path: return False
+        try:
+            self._doc.save(path, incremental=False, clean=True, garbage=4, deflate=True, linear=True)
+            self._modified = False
+            self.operation_completed.emit('compressed: ' + os.path.basename(path))
+            return True
+        except Exception as e:
+            self.error_occurred.emit('compress failed: ' + str(e))
+            return False
+
+    def copy_pages(self, page_nums, target_engine, insert_after=-1):
+        if not self._doc or not target_engine._doc: return 0
+        self._snap()
+        target_engine._snap()
+        try:
+            self._doc.select(page_nums)
+            while self._doc.page_count > 0:
+                p = self._doc[0]
+                r = target_engine._doc.new_page(-1, width=p.rect.width, height=p.rect.height)
+                r.show_pdf_page(r.rect, self._doc, 0)
+                self._doc.delete_page(0)
+            self._doc.close()
+            self._doc = fitz.open()
+            target_engine._modified = True
+            self._modified = True
+            target_engine.document_loaded.emit(target_engine._filepath, target_engine._doc.page_count)
+            return len(page_nums)
+        except:
+            return 0
+
     def extract_images(self, out_dir):
         if not self._doc: return []
         ex=[]

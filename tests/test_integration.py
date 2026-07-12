@@ -20,32 +20,38 @@ p.insert_text((50, 180), "合同金额：100,000 元", fontsize=12, fontname="ch
 p.insert_text((50, 220), "付款日期：2026年12月31日", fontsize=12, fontname="china-s")
 doc.save(test_pdf); doc.close()
 
-# 测试
 w = MainWindow()
-ok = w.engine.open(test_pdf)
-assert ok, "打开失败"
-print(f"[1/7] ✅ 打开PDF: {w.engine.page_count}页")
+eng = w._eng  # Use property, not direct attribute
+assert eng is not None, "引擎不存在"
 
-img = w.engine.render_page(0, 120)
+ok = eng.open(test_pdf)
+assert ok, "打开失败"
+print(f"[1/7] ✅ 打开PDF: {eng.page_count}页")
+
+img = eng.render_page(0, 120)
+assert img is not None
 print(f"[2/7] ✅ 渲染: {img.width()}x{img.height()}")
 
-w._build_thumbnails()
-print(f"[3/7] ✅ 缩略图: {w.thumb_layout.count()} 项")
+w._thumbs()
+tc = w._tab
+assert tc is not None
+print(f"[3/7] ✅ 缩略图: {tc.thumb_list.count()}项")
 
-results = w.engine.find_text("张三")
+results = eng.find_text("张三")
 assert len(results) > 0
-print(f"[4/7] ✅ 查找: {len(results)} 处")
+print(f"[4/7] ✅ 查找: {len(results)}处")
 
 r = results[0]
-ok = w.engine.replace_text(r.page_num, r.rect, "李四")
-print(f"[5/7] ✅ 替换: {'成功' if ok else '失败'}")
+ok = eng.replace_text(r.page_num, r.rect, "李四")
+assert ok
+print(f"[5/7] ✅ 替换成功")
 
-w.engine.insert_blank_page(0)
-print(f"[6/7] ✅ 插入空白页: {w.engine.page_count}页")
+eng.insert_blank_page(0)
+print(f"[6/7] ✅ 插入空白页: {eng.page_count}页")
 
 out = os.path.join(tmp_dir, "out.pdf")
-w.engine.save(out)
+eng.save(out)
 print(f"[7/7] ✅ 保存: {os.path.getsize(out)//1024}KB")
 
-w.engine.close()
+eng.close()
 print("🎉 全部集成测试通过!")

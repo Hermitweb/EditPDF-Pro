@@ -1,43 +1,29 @@
-# EditPDF Pro
-
-# 环境
-venv/
-.env
-.env*
-
-# 打包
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
 dist/
 build/
 *.spec
+*.exe
 
-# 临时文件
-__pycache__/
-*.pyc
-*.pyo
-*.swp
-*.swo
-*~
+# Virtualenv
+venv/
+.venv/
 
 # IDE
-.idea/
 .vscode/
-*.code-workspace
+.idea/
+.hermes/
 
-# 系统
+# OS
 Thumbs.db
 .DS_Store
 
-# 测试生成物
-tests/__tmp*
-tests/*_wm.pdf
-tests/fixtures/
+# Test artifacts
+tests/__tmp_*.pdf
+tests/test_wm.pdf
 
-# 脚本辅助
-scripts/
-
-# 测试覆盖率
-.coverage
-.pytest_cache/
-
-# Hermes
-hermes-home/
+# Local config
+.env
+*.local
