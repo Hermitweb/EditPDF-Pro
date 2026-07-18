@@ -1,0 +1,36 @@
+/* === EditPDF Pro 轻量样式 === */
+
+/* 滚动条 */
+QScrollBar:vertical { width: 8px; margin: 0; }
+QScrollBar::handle:vertical { border-radius: 4px; min-height: 30px; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
+QScrollBar:horizontal { height: 8px; margin: 0; }
+QScrollBar::handle:horizontal { border-radius: 4px; min-width: 30px; }
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0; }
+
+QLineEdit { border-radius: 6px; padding: 5px 10px; font-size: 13px; }
+QLineEdit:focus { border-width: 2px; padding: 4px 9px; }
+
+QMenu { border-radius: 8px; padding: 4px; }
+QMenu::item { padding: 8px 28px; border-radius: 4px; font-size: 13px; }
+QMenu::separator { height: 1px; margin: 4px 8px; }
+
+QToolTip { border-radius: 6px; padding: 6px 10px; font-size: 12px; }
+
+QTabBar::tab { border-radius: 6px 6px 0 0; padding: 6px 14px; margin-right: 2px; font-size: 12px; }
+QTabBar::close-button { border-radius: 3px; }
+QTabBar::close-button:hover { background: rgba(128,128,128,0.2); }
+
+#bottom_bar { border-top: 1px solid palette(midlight); padding: 4px 12px; }
+#find_panel { border-top: 1px solid palette(midlight); padding: 4px 8px; }
+#status_bar { border-top: 1px solid palette(midlight); }
+#text_props_bar { border-top: 2px solid #f9ab00; background: palette(alternate-base); }
+
+QScrollArea { border: none; }
+
+QListWidget { border-right: 1px solid palette(midlight); outline: none; padding: 4px; }
+QListWidget::item { border-radius: 6px; margin: 2px 4px; }
+QListWidget::item:selected { border-width: 2px; }
+
+#find_result_list { border: 1px solid palette(midlight); border-top: none; border-radius: 0 0 6px 6px; }
+#find_result_list::item { padding: 6px 12px; }

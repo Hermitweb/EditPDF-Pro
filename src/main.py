@@ -3,7 +3,6 @@
 import sys
 import os
 
-# 确保可以找到 src 包
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from PyQt5.QtWidgets import QApplication
@@ -16,8 +15,6 @@ from ui.main_window import MainWindow
 
 
 def run():
-    """应用启动入口"""
-    # 高DPI支持
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
     )
@@ -28,10 +25,28 @@ def run():
     app.setApplicationName(APP_NAME)
     app.setOrganizationName(ORG_NAME)
 
-    # 初始化主题
+    # 加载 Qt 中文翻译
+    try:
+        from PyQt5.QtCore import QTranslator
+        translator = QTranslator()
+        local_qt = os.path.join(os.path.dirname(__file__), "res", "qt_zh_CN.qm")
+        if not os.path.exists(local_qt):
+            local_qt = os.path.join(getattr(sys, '_MEIPASS', ''), "res", "qt_zh_CN.qm")
+        if os.path.exists(local_qt):
+            translator.load(local_qt)
+        else:
+            from PyQt5.QtCore import QLibraryInfo
+            translator.load("qt_zh_CN", QLibraryInfo.location(QLibraryInfo.TranslationsPath))
+        app.installTranslator(translator)
+    except: pass
+
     ThemeManager.init()
 
-    # 创建主窗口
+    style_path = os.path.join(os.path.dirname(__file__), "app", "style.qss")
+    if os.path.exists(style_path):
+        with open(style_path, "r", encoding="utf-8") as f:
+            app.setStyleSheet(f.read())
+
     window = MainWindow()
     window.show()
 
