@@ -22,12 +22,12 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install PyMuPDF PyQt5 qfluentwidgets Pillow pytest
+          pip install --retries 3 PyMuPDF PyQt5 PyQt-Fluent-Widgets Pillow pytest
 
       - name: Run tests
         env:
           PYTHONPATH: ${{ github.workspace }}/src
-        run: python -m pytest tests/test_pdf_engine.py -v --tb=short -k "not gui"
+        run: python -m pytest tests/test_pdf_engine.py -v --tb=short
 
   build:
     needs: test
@@ -44,11 +44,12 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install PyMuPDF PyQt5 qfluentwidgets Pillow pyinstaller
+          pip install --retries 3 PyMuPDF PyQt5 PyQt-Fluent-Widgets Pillow pyinstaller
 
       - name: Build with PyInstaller
         run: >-
-          pyinstaller --onefile --windowed --name EditPDF-Pro --distpath dist
+          pyinstaller --onefile --windowed
+          --name EditPDF-Pro --distpath dist
           --clean --noconfirm
           --add-data=res/;res
           --add-data=src/app;app
