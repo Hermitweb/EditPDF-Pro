@@ -20,9 +20,14 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
+        timeout-minutes: 10
         run: |
-          pip install --upgrade pip
-          pip install --retries 3 PyMuPDF PyQt5 PyQt-Fluent-Widgets Pillow pytest
+          python -m pip install --upgrade pip
+          pip install PyMuPDF
+          pip install PyQt5
+          pip install PyQt-Fluent-Widgets
+          pip install Pillow
+          pip install pytest
 
       - name: Run tests
         env:
@@ -42,29 +47,18 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
+        timeout-minutes: 10
         run: |
-          pip install --upgrade pip
-          pip install --retries 3 PyMuPDF PyQt5 PyQt-Fluent-Widgets Pillow pyinstaller
+          python -m pip install --upgrade pip
+          pip install PyMuPDF
+          pip install PyQt5
+          pip install PyQt-Fluent-Widgets
+          pip install Pillow
+          pip install pyinstaller
 
       - name: Build with PyInstaller
-        run: >-
-          pyinstaller --onefile --windowed
-          --name EditPDF-Pro --distpath dist
-          --clean --noconfirm
-          --add-data=res/;res
-          --add-data=src/app;app
-          --add-data=src/core;core
-          --add-data=src/ui;ui
-          --add-data=src/utils;utils
-          --hidden-import PyQt5
-          --hidden-import PyQt5.QtCore
-          --hidden-import PyQt5.QtGui
-          --hidden-import PyQt5.QtWidgets
-          --hidden-import fitz
-          --hidden-import pymupdf
-          --hidden-import qfluentwidgets
-          --hidden-import PIL
-          src/main.py
+        run: |
+          pyinstaller --onefile --windowed --name EditPDF-Pro --distpath dist --clean --noconfirm --add-data=res/;res --add-data=src/app;app --add-data=src/core;core --add-data=src/ui;ui --add-data=src/utils;utils --hidden-import PyQt5 --hidden-import PyQt5.QtCore --hidden-import PyQt5.QtGui --hidden-import PyQt5.QtWidgets --hidden-import fitz --hidden-import pymupdf --hidden-import qfluentwidgets --hidden-import PIL src/main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
