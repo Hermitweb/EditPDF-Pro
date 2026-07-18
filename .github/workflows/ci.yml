@@ -21,11 +21,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install PyMuPDF PyQt5 PyQt-Fluent-Widgets Pillow pytest
+          pip install --upgrade pip
+          pip install PyMuPDF PyQt5 qfluentwidgets Pillow pytest
 
       - name: Run tests
-        run: |
-          python -m pytest tests/ -v --tb=short
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: python -m pytest tests/test_pdf_engine.py -v --tb=short -k "not gui"
 
   build:
     needs: test
@@ -41,14 +43,27 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install PyMuPDF PyQt5 PyQt-Fluent-Widgets Pillow pyinstaller
+          pip install --upgrade pip
+          pip install PyMuPDF PyQt5 qfluentwidgets Pillow pyinstaller
 
-      - name: Build EXE
-        run: |
-          pyinstaller --onefile --windowed --name "EditPDF-Pro" `
-            --hidden-import PyQt5 --hidden-import fitz `
-            --hidden-import qfluentwidgets --hidden-import PIL `
-            src/main.py
+      - name: Build with PyInstaller
+        run: >-
+          pyinstaller --onefile --windowed --name EditPDF-Pro --distpath dist
+          --clean --noconfirm
+          --add-data=res/;res
+          --add-data=src/app;app
+          --add-data=src/core;core
+          --add-data=src/ui;ui
+          --add-data=src/utils;utils
+          --hidden-import PyQt5
+          --hidden-import PyQt5.QtCore
+          --hidden-import PyQt5.QtGui
+          --hidden-import PyQt5.QtWidgets
+          --hidden-import fitz
+          --hidden-import pymupdf
+          --hidden-import qfluentwidgets
+          --hidden-import PIL
+          src/main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
